@@ -1,0 +1,112 @@
+body {
+  font-family: "Inter", system-ui, -apple-system, Segoe UI, sans-serif;
+  background: #f8f4f4;
+}
+
+/* Мягко-красная цветовая схема */
+:root {
+  --primary-red: #b85454;
+  --primary-red-hover: #a04545;
+  --primary-red-light: #e8d4d4;
+}
+
+.sidebar {
+  min-height: 100vh;
+  background: #b85454;
+  color: #fff;
+}
+
+.sidebar .nav-link {
+  color: #ffe8e8;
+}
+
+.sidebar .nav-link.active {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+/* Переопределение Bootstrap primary на мягко-красный */
+.btn-primary {
+  background-color: #b85454;
+  border-color: #b85454;
+}
+.btn-primary:hover {
+  background-color: #a04545;
+  border-color: #a04545;
+}
+.btn-outline-primary {
+  color: #b85454;
+  border-color: #b85454;
+}
+.btn-outline-primary:hover {
+  background-color: #b85454;
+  border-color: #b85454;
+  color: #fff;
+}
+.badge.text-bg-primary { background-color: #b85454; }
+.text-primary { color: #b85454 !important; }
+.border-primary { border-color: #b85454 !important; }
+.link-primary { color: #b85454 !important; }
+.form-control:focus, .form-select:focus {
+  border-color: #b85454;
+  box-shadow: 0 0 0 0.25rem rgba(184, 84, 84, 0.25);
+}
+
+.section {
+  display: none;
+}
+
+.section.active {
+  display: block;
+}
+
+.card {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+  border: none;
+}
+
+.badge-status {
+  width: 110px;
+}
+
+.doc-preview {
+  background: #fff;
+  border: 1px solid #dfe5ef;
+  border-radius: 8px;
+  padding: 16px;
+  min-height: 180px;
+}
+
+.timeline {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.timeline li {
+  border-left: 3px solid #b85454;
+  padding-left: 12px;
+  margin-bottom: 12px;
+}
+
+.invalid-feedback {
+  display: none;
+  width: 100%;
+  margin-top: 0.25rem;
+  font-size: 0.875em;
+  color: #dc3545;
+}
+
+.is-invalid {
+  border-color: #dc3545;
+  padding-right: calc(1.5em + 0.75rem);
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath d='m5.8 3.6 .4.4.4-.4m0 4.8-.4-.4-.4.4'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right calc(0.375em + 0.1875rem) center;
+  background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+
+.is-invalid:focus {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+}

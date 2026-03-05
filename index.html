@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Банковская гарантия — Практика 4</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container-fluid">
+    <div class="row">
+      <aside class="col-12 col-md-3 col-lg-2 sidebar p-3">
+        <h5 class="mb-4">Банковская гарантия</h5>
+        <div class="nav flex-column nav-pills gap-2" id="menu">
+          <a class="nav-link active" data-target="operations" href="#">Операции</a>
+          <a class="nav-link" data-target="risks" href="#">Оценка рисков</a>
+          <a class="nav-link" data-target="clients" href="#">Клиенты</a>
+          <a class="nav-link" data-target="documents" href="#">Документы</a>
+          <a class="nav-link" data-target="reports" href="#">Отчеты</a>
+          <a class="nav-link" data-target="refs" href="#">Справочники</a>
+          <a class="nav-link" data-target="history" href="#">История операций</a>
+        </div>
+      </aside>
+
+      <main class="col-12 col-md-9 col-lg-10 p-4">
+        <div id="operations" class="section active">
+          <div class="row g-3">
+            <div class="col-lg-6">
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="card-title">Создать заявку на банковскую гарантию</h5>
+                  <form id="applicationForm" class="row g-2">
+                    <div class="col-12">
+                      <label class="form-label" for="applicationClient">Клиент</label>
+                      <select class="form-select" id="applicationClient" name="client" required></select>
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label" for="applicationManager">Менеджер</label>
+                      <select class="form-select" id="applicationManager" name="manager" required></select>
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label" for="applicationType">Тип гарантии</label>
+                      <select class="form-select" id="applicationType" name="guarantee_type" required></select>
+                    </div>
+                    <div class="col-6">
+                      <label class="form-label" for="applicationAmount">Сумма гарантии</label>
+                      <input class="form-control" id="applicationAmount" name="amount" type="number" min="1" required />
+                    </div>
+                    <div class="col-6">
+                      <label class="form-label" for="applicationTerm">Срок (дней)</label>
+                      <input class="form-control" id="applicationTerm" name="term_days" type="number" min="1" required />
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label" for="applicationBeneficiary">Бенефициар</label>
+                      <input class="form-control" id="applicationBeneficiary" name="beneficiary" placeholder="Наименование бенефициара" maxlength="255" />
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label" for="applicationComment">Комментарий</label>
+                      <input class="form-control" id="applicationComment" name="comment" placeholder="Дополнительная информация" maxlength="500" />
+                    </div>
+                    <div class="col-12">
+                      <button class="btn btn-primary w-100" type="submit">Принять заявку</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-6">
+              <div class="card mb-3">
+                <div class="card-body">
+                  <h5 class="card-title">Проверка возможности выдачи</h5>
+                  <p class="small text-muted mb-2">Решение по заявке (одобрение или отказ) принимается только во вкладке <strong>«Оценка рисков»</strong>.</p>
+                  <form id="checkForm" class="row g-2">
+                    <div class="col-12">
+                      <label class="form-label" for="checkApplicationId">Заявка</label>
+                      <select class="form-select" id="checkApplicationId" name="applicationId"></select>
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label" for="checkStatus">Статус проверки</label>
+                      <input class="form-control" id="checkStatus" name="status" readonly />
+                    </div>
+                    <div class="col-12">
+                      <a class="btn btn-outline-primary w-100" href="#" data-target="risks" id="linkToRisks">Перейти к оценке рисков</a>
+                    </div>
+                  </form>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-body">
+                  <h6 class="text-muted">Дальнейшие шаги</h6>
+                  <div class="d-flex flex-wrap gap-2">
+                    <button class="btn btn-success btn-sm" id="btnCalculate">Рассчитать условия</button>
+                    <button class="btn btn-warning btn-sm" id="btnIssue">Выпустить гарантию</button>
+                    <button class="btn btn-secondary btn-sm" id="btnRegister">Зарегистрировать</button>
+                  </div>
+                  <p class="small text-muted mt-2 mb-0">Работает с заявкой, выбранной в списке «Проверка возможности выдачи» выше.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <div class="card">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                      <h5 class="mb-1">Журнал заявок</h5>
+                      <p class="text-muted small mb-0">Все заявки на банковскую гарантию.</p>
+                    </div>
+                    <span class="badge text-bg-light" id="countApps"></span>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label visually-hidden" for="appsFilter">Поиск по журналу заявок</label>
+                    <input type="text" class="form-control" id="appsFilter" name="appsFilter" placeholder="Поиск по клиенту, сумме, номеру..." />
+                  </div>
+                  <div class="table-responsive">
+                    <table class="table table-sm align-middle" id="appsTable">
+                      <thead class="table-light">
+                        <tr>
+                          <th>#</th>
+                          <th>Дата</th>
+                          <th>Клиент</th>
+                          <th>Тип</th>
+                          <th>Сумма</th>
+                          <th>Срок</th>
+                          <th>Статус проверки</th>
+                          <th>Статус выпуска</th>
+                          <th>Статус регистрации</th>
+                          <th>Документы</th>
+                        </tr>
+                      </thead>
+                      <tbody></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="clients" class="section">
+          <div class="card">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                  <h5 class="mb-1">Клиенты</h5>
+                  <p class="text-muted small mb-0"></p>
+                </div>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-sm btn-primary" id="btnAddClient">Добавить клиента</button>
+                </div>
+              </div>
+              <div class="table-responsive">
+                <table class="table align-middle" id="clientsTable">
+                  <thead>
+                    <tr>
+                      <th>Наименование/ФИО</th>
+                      <th>ИНН</th>
+                      <th>Контакты</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="documents" class="section">
+          <div class="card">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">Все документы</h5>
+                <div style="max-width:300px;">
+                  <label class="form-label visually-hidden" for="docsFilter">Поиск по документам</label>
+                  <input type="text" class="form-control" id="docsFilter" name="docsFilter" placeholder="Поиск по заявке, клиенту..." />
+                </div>
+              </div>
+              <div class="table-responsive">
+                <table class="table table-sm" id="docsTable">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Дата</th>
+                      <th>Заявка</th>
+                      <th>Клиент</th>
+                      <th>Сумма</th>
+                      <th>Тип документа</th>
+                      <th>Действия</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="risks" class="section">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Оценка рисков по заявке на банковскую гарантию</h5>
+              <p class="text-muted small">Проверка критериев выдачи. Итоговое решение и комментарий формируются автоматически по результатам оценки.</p>
+              <form id="riskForm" class="row g-3">
+                <div class="col-12">
+                  <label class="form-label" for="riskApplicationId">Заявка</label>
+                  <select class="form-select" id="riskApplicationId" name="applicationId">
+                    <option value="">— Выберите заявку —</option>
+                  </select>
+                </div>
+                <div id="riskSummary" class="col-12 small text-muted" style="display: none;">
+                  <strong>Клиент:</strong> <span id="riskClientName"></span> &nbsp;|&nbsp;
+                  <strong>Сумма:</strong> <span id="riskAmount"></span> &nbsp;|&nbsp;
+                  <strong>Срок:</strong> <span id="riskTerm"></span> дн. &nbsp;|&nbsp;
+                  <strong>Бенефициар:</strong> <span id="riskBeneficiary"></span>
+                </div>
+                <div class="col-12">
+                  <h6 class="mb-2">Критерии оценки</h6>
+                  <ul class="list-group list-group-flush small">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                      Сумма в пределах лимита банка (5 000 000 ₽)
+                      <span class="badge text-bg-secondary" id="riskAmountOk">—</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                      Срок гарантии в пределах допустимого (до 365 дн.)
+                      <span class="badge text-bg-secondary" id="riskTermOk">—</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                      Отсутствие негативной кредитной истории
+                      <span>
+                        <label class="me-2"><input type="radio" name="riskCredit" value="yes" /> Да</label>
+                        <label><input type="radio" name="riskCredit" value="no" /> Нет</label>
+                      </span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                      Отсутствие судебных процедур / банкротства
+                      <span>
+                        <label class="me-2"><input type="radio" name="riskCourt" value="yes" /> Да</label>
+                        <label><input type="radio" name="riskCourt" value="no" /> Нет</label>
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+                <div class="col-12">
+                  <label class="form-label">Итоговое решение</label>
+                  <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="badge fs-6" id="riskDecisionBadge">—</span>
+                  </div>
+                  <div class="small text-muted" id="riskCommentText">—</div>
+                </div>
+                <div class="col-12">
+                  <button type="submit" class="btn btn-primary">Применить решение</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <div id="reports" class="section">
+          <div class="row g-3">
+            <div class="col-lg-6">
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="card-title">Статусы заявок на банковскую гарантию</h5>
+                  <div style="height: 300px; position: relative;">
+                    <canvas id="chartStatuses"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-6">
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="card-title">Количество гарантий по типам</h5>
+                  <div style="height: 300px; position: relative;">
+                    <canvas id="chartTypes"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="refs" class="section">
+          <div class="row g-3">
+            <div class="col-lg-3">
+              <div class="card">
+                <div class="card-body">
+                  <h6>Справочник клиентов</h6>
+                  <ul class="list-group list-group-flush small" id="refClients"></ul>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-3">
+              <div class="card">
+                <div class="card-body">
+                  <h6>Справочник сотрудников</h6>
+                  <ul class="list-group list-group-flush small" id="refStaff"></ul>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-3">
+              <div class="card">
+                <div class="card-body">
+                  <h6>Типы гарантий</h6>
+                  <ul class="list-group list-group-flush small" id="refGuaranteeTypes"></ul>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-3">
+              <div class="card">
+                <div class="card-body">
+                  <h6>Тарифы</h6>
+                  <ul class="list-group list-group-flush small" id="refTariffs"></ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="history" class="section">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Полная история операций</h5>
+              <p class="text-muted small">Все шаги по всем заявкам.</p>
+              <div class="table-responsive">
+                <table class="table table-sm" id="historyTable">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Время</th>
+                      <th>Заявка</th>
+                      <th>Шаг</th>
+                      <th>Комментарий</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script>window.API_BASE = window.API_BASE || (location.protocol === 'file:' ? 'http://localhost:3000/api' : '/api');</script>
+  <script src="js/api.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/forms.js"></script>
+  <script src="js/reports.js"></script>
+  <script src="js/docs.js"></script>
+  <script src="js/app.js"></script>
+
+  <!-- Модальное окно добавления клиента -->
+  <div class="modal fade" id="modalAddClient" tabindex="-1" aria-labelledby="modalAddClientLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalAddClientLabel">Добавить клиента</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="formAddClient">
+            <div class="mb-3">
+              <label class="form-label" for="addClientName">Наименование/ФИО</label>
+              <input type="text" class="form-control" id="addClientName" name="name" maxlength="255" required />
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="addClientInn">ИНН</label>
+              <input type="text" class="form-control" id="addClientInn" name="inn" maxlength="20" placeholder="7701234567" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="addClientContact">Контакты</label>
+              <input type="text" class="form-control" id="addClientContact" name="contact" maxlength="255" placeholder="email@example.com, +7 (495) 123-45-67" />
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+          <button type="button" class="btn btn-primary" id="btnSubmitClient">Добавить</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

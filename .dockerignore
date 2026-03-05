@@ -1,0 +1,7 @@
+# Игнорировать при сборке образа backend
+server/node_modules
+server/.env
+.git
+*.md
+.env
+.env.*

@@ -1,0 +1,68 @@
+# Docker Compose для Docker Swarm (банковская гарантия).
+# Данные MySQL на NFS (/mnt/mysqldata), чтобы при падении ноды с БД
+# Swarm мог поднять контейнер на другой ноде с теми же данными.
+#
+# Подготовка: см. SETUP-FULL.md
+#   docker network create --driver overlay --attachable bank_guarantee_net
+#   docker build -t bank-guarantee-backend:latest -f server/Dockerfile .
+#   На всех нодах: /mnt/mysqldata (NFS) и метка: docker node update --label-add mysqldata=true NODE
+#
+# Запуск: docker stack deploy -c docker-compose.yaml bank-guarantee
+
+version: "3.9"
+
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: bank_guarantee
+    ports:
+      - "3306:3306"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+      placement:
+        constraints:
+          - node.labels.mysqldata == true
+    networks:
+      - appnet
+    volumes:
+      - /mnt/mysqldata:/var/lib/mysql
+    configs:
+      - source: schema_sql
+        target: /docker-entrypoint-initdb.d/01-schema.sql
+
+  backend:
+    image: bank-guarantee-backend:latest
+    environment:
+      DB_HOST: db
+      DB_USER: root
+      DB_PASSWORD: rootpass
+      DB_NAME: bank_guarantee
+      NODE_ENV: production
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+      placement:
+        constraints:
+          - node.role == manager
+    networks:
+      - appnet
+    depends_on:
+      - db
+
+configs:
+  schema_sql:
+    file: ./server/schema.sql
+
+networks:
+  appnet:
+    external: true
+    name: bank_guarantee_net
+    attachable: true
