@@ -40,7 +40,7 @@ network:
   ethernets:
     enp0s3:
       addresses: [192.168.0.1/24]
-      # Если нужен DHCP-шлюз и DNS, добавьте:
+      # Если в сети есть шлюз (роутер), укажите его IP, например:
       # gateway4: 192.168.0.1
       # nameservers: { addresses: [8.8.8.8] }
 ```

@@ -1,51 +1,32 @@
 # Загрузка проекта в Git (GitHub)
 
-Пароль и логин **нигде в репозитории не храните**. Выполняйте команды ниже на своём компьютере (или на master, если там ведёте разработку).
+Логин и пароль/токен в репозитории не хранить. GitHub для Git-операций требует Personal Access Token (пароль учетной записи не подходит).
 
-## 1. Создать репозиторий на GitHub
+## Быстрый вариант: один скрипт (создать репо и запушить)
 
-1. Зайдите на https://github.com (логин: **rogirem**).
-2. New repository → имя, например `bank-guarantee` или `pr4`.
-3. Не добавляйте README, .gitignore и лицензию — репозиторий должен быть пустым.
+1. Создайте токен: https://github.com/settings/tokens (права: repo).
+2. В каталоге `bank-guarantee` выполните (подставьте свой токен):
 
-## 2. Инициализация и первый коммит (в каталоге проекта)
-
-В каталоге `bank-guarantee` (или в корне `pr4`, если весь проект в одном репо):
-
-```bash
-cd C:\pr4\bank-guarantee
-git init
-git add .
-git commit -m "Docker Swarm: банковская гарантия, NFS, демо отказоустойчивости"
+```powershell
+$env:GITHUB_TOKEN = "ваш_токен"
+.\push-to-github.ps1
 ```
 
-Если репозиторий вы создали в папке `pr4` и в Git нужно отправить всё из `pr4`:
+Скрипт создаст репозиторий `rogirem/bank-guarantee`, если его еще нет, и выполнит push. После этого URL remote будет без токена.
+
+## Ручной вариант
+
+1. Создать репозиторий на GitHub: https://github.com/new , имя `bank-guarantee`, без README.
+2. Локально уже выполнено: `git init`, `git add .`, `git commit`, `git remote add origin https://github.com/rogirem/bank-guarantee.git`.
+3. Запушить с токеном (при запросе пароля ввести токен вместо пароля):
 
 ```bash
-cd C:\pr4
-git init
-git add .
-git commit -m "Docker Swarm: банковская гарантия, NFS, демо отказоустойчивости"
-```
-
-## 3. Подключить удалённый репозиторий и отправить код
-
-Подставьте свой URL (логин и имя репозитория):
-
-```bash
-git remote add origin https://github.com/rogirem/bank-guarantee.git
-git branch -M main
 git push -u origin main
 ```
 
-При запросе пароля используйте **Personal Access Token** (пароль учётной записи GitHub может не подходить).  
-Создать токен: GitHub → Settings → Developer settings → Personal access tokens → Generate new token (с правом `repo`).
+Токен: GitHub -> Settings -> Developer settings -> Personal access tokens -> Generate (scope repo).
 
-Для Windows при первом push можно использовать Git Credential Manager — он запросит логин и токен и сохранит их безопасно.
+## Не коммитить
 
-## 4. Не коммитить
-
-- Файлы с паролями и секретами (`.env` с реальными данными).
+- Файлы с паролями и секретами (`.env`).
 - `node_modules/` (уже в `.gitignore`).
-
-Если репозиторий уже есть и нужно только обновить его из этой папки — сделайте `git add .`, `git commit`, затем `git push`.
