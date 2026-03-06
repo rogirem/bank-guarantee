@@ -3,7 +3,7 @@ SET NAMES 'utf8mb4';
 
 CREATE TABLE IF NOT EXISTS clients (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
+  name INT NOT NULL,
   inn VARCHAR(20),
   contact VARCHAR(255)
 ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
