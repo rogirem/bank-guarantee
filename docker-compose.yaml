@@ -5,33 +5,46 @@
 # Подготовка: см. SETUP-FULL.md
 #   docker network create --driver overlay --attachable bank_guarantee_net
 #   docker build -t bank-guarantee-backend:latest -f server/Dockerfile .
-#   На всех нодах: /mnt/mysqldata (NFS) и метка: docker node update --label-add mysqldata=true NODE
+#   docker build -t bank-guarantee-jenkins:latest -f jenkins.Dockerfile .
+#   На worker'ах: /mnt/mysqldata (NFS) и метка mysqldata=true (БД только на worker, не на master).
 #
 # Запуск: docker stack deploy -c docker-compose.yaml bank-guarantee
+#
+# Чтобы быстрее обнаруживать падение ноды (в 2 раза): на master один раз:
+#   sudo docker swarm update --dispatcher-heartbeat 2s
 
 version: "3.9"
 
 services:
   db:
     image: mysql:8.0
+    command: ["mysqld", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci", "--skip-name-resolve", "--innodb-buffer-pool-size=64M", "--innodb-flush-log-at-trx-commit=2"]
     environment:
       MYSQL_ROOT_PASSWORD: rootpass
       MYSQL_DATABASE: bank_guarantee
     ports:
       - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootpass"]
+      interval: 3s
+      timeout: 2s
+      retries: 5
+      start_period: 15s
     deploy:
       replicas: 1
       restart_policy:
         condition: any
+        delay: 1s
       placement:
         constraints:
+          - node.role == worker
           - node.labels.mysqldata == true
     networks:
       - appnet
     volumes:
       - /mnt/mysqldata:/var/lib/mysql
     configs:
-      - source: schema_sql
+      - source: schema_sql_v2
         target: /docker-entrypoint-initdb.d/01-schema.sql
 
   backend:
@@ -49,16 +62,35 @@ services:
       replicas: 1
       restart_policy:
         condition: any
-      placement:
-        constraints:
-          - node.role == manager
+        delay: 2s
+      # Без placement backend может запускаться на любой ноде (в т.ч. worker при drain master).
+      # Образ bank-guarantee-backend:latest должен быть на всех нодах или в registry.
     networks:
       - appnet
     depends_on:
       - db
 
+  jenkins:
+    image: bank-guarantee-jenkins:latest
+    user: "0:0"
+    networks:
+      - appnet
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - /opt/jenkins:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == master
+      restart_policy:
+        condition: any
+
 configs:
-  schema_sql:
+  schema_sql_v2:
     file: ./server/schema.sql
 
 networks:

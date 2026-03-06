@@ -1,20 +1,23 @@
+-- Кодировка для русского и других символов
+SET NAMES 'utf8mb4';
+
 CREATE TABLE IF NOT EXISTS clients (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
   inn VARCHAR(20),
   contact VARCHAR(255)
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS staff (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
   role VARCHAR(50)
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS guarantee_types (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS tariffs (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -22,7 +25,7 @@ CREATE TABLE IF NOT EXISTS tariffs (
   commission_percent DECIMAL(5,2),
   min_commission DECIMAL(15,2),
   FOREIGN KEY (guarantee_type_id) REFERENCES guarantee_types(id)
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS applications (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -41,7 +44,7 @@ CREATE TABLE IF NOT EXISTS applications (
   FOREIGN KEY (client_id) REFERENCES clients(id),
   FOREIGN KEY (manager_id) REFERENCES staff(id),
   FOREIGN KEY (guarantee_type_id) REFERENCES guarantee_types(id)
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS history (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -50,7 +53,7 @@ CREATE TABLE IF NOT EXISTS history (
   comment VARCHAR(500),
   ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (application_id) REFERENCES applications(id)
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS documents (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -58,7 +61,7 @@ CREATE TABLE IF NOT EXISTS documents (
   doc_type VARCHAR(32),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (application_id) REFERENCES applications(id)
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Начальные данные
 INSERT INTO clients (name, inn, contact) VALUES

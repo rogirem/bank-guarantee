@@ -1,18 +1,11 @@
-# Зависимости и окружение
 node_modules/
 server/node_modules/
 .env
 .env.*
-!.env.example
-
-# Локальные и временные файлы
 *.log
 .DS_Store
 .idea/
-*.swp
-*.swo
-
-# Сборки и артефакты
 dist/
 build/
-*.tgz
+Thumbs.db
+*.tar

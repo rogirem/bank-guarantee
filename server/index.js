@@ -12,6 +12,14 @@ dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use((_req, res, next) => {
+  const origJson = res.json.bind(res);
+  res.json = (body) => {
+    res.setHeader("Content-Type", "application/json; charset=utf-8");
+    return origJson(body);
+  };
+  next();
+});
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
@@ -21,6 +29,7 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   namedPlaceholders: true,
+  charset: "utf8mb4",
 });
 
 app.get("/api/bootstrap", async (_req, res) => {

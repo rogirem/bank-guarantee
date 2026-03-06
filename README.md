@@ -1,9 +1,10 @@
 # Bank Guarantee, Docker Swarm
 
-Veb-prilozhenie v Docker Swarm (master, worker1, worker2). MySQL na NFS.
+- **Полная настройка** (VirtualBox, Ubuntu 22.04, доступ с хоста 192.168.0.1:3000): **SETUP-FULL.md**
+- **Демо преподавателю** (отказоустойчивость, восстановление БД): **DEMO-TEACHER.md**
+- **Данные пропадают после выключения ноды**: **docs/PERSISTENCE-FIX.md**
+- **Jenkins, Git, перенос файлов на ВМ** (регистрация, push, job FIO=VARCHAR): **docs/JENKINS.md**
+- **Git: первый push в GitHub**: **docs/GIT.md**
+- **NFS для данных MySQL**: **NFS-SETUP.md**
 
-- Nastroyka s nulja, VirtualBox, dostup s hosta 192.168.0.1:3000: [SETUP-FULL.md](SETUP-FULL.md)
-- Demo dlya prepodavatelya: [DEMO-TEACHER.md](DEMO-TEACHER.md)
-- Zapush v GitHub: [GIT.md](GIT.md)
-
-Kodirovka fajlov: UTF-8. Perenosy strok: LF (v .gitattributes).
+Пути: редакция в общей папке (на ВМ - /media/sf_pr4); рабочий каталог на виртуалке - **/opt/pr4/bank-guarantee**. Как перенести файлы из общей папки в /opt/pr4/bank-guarantee - см. раздел 0 в docs/JENKINS.md.
