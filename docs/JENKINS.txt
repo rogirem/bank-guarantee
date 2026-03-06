@@ -1,0 +1,197 @@
+================================================================================
+JENKINS И GIT: ПОЛНАЯ ИНСТРУКЦИЯ
+================================================================================
+
+Файлы в проекте можно редактировать в общей папке (на хосте C:\pr4, на ВМ - /media/sf_pr4). Рабочий каталог на виртуалке: /opt/pr4/bank-guarantee. Jenkins и deploy запускать из /opt/pr4/bank-guarantee.
+
+--------------------------------------------------------------------------------
+0. ПЕРЕНОС ФАЙЛОВ ИЗ ОБЩЕЙ ПАПКИ В /opt/pr4/bank-guarantee
+--------------------------------------------------------------------------------
+
+На виртуалке (master):
+
+  sudo mkdir -p /opt/pr4
+  sudo cp -r /media/sf_pr4/bank-guarantee /opt/pr4/
+
+Обновить только изменённые файлы:
+
+  sudo rsync -av --exclude='.git' --exclude='node_modules' /media/sf_pr4/bank-guarantee/ /opt/pr4/bank-guarantee/
+
+Или работать сразу из общей папки:
+
+  cd /media/sf_pr4/bank-guarantee
+  sudo docker stack deploy -c docker-compose.yaml bank-guarantee
+
+--------------------------------------------------------------------------------
+1. РЕГИСТРАЦИЯ НА GITHUB
+--------------------------------------------------------------------------------
+
+1. Зайти на https://github.com -> Sign up (email, пароль, username).
+2. Создать репозиторий: кнопка "+" справа вверху -> New repository. Имя: bank-guarantee, Public, без README. Create repository.
+
+--------------------------------------------------------------------------------
+2. PUSH ПО SSH (БЕЗ ТОКЕНА И ПАРОЛЯ)
+--------------------------------------------------------------------------------
+
+На виртуалке (под пользователем y) делаем один раз.
+
+Шаг 1. Убрать ошибку "dubious ownership":
+
+  git config --global --add safe.directory /opt/pr4/bank-guarantee
+
+Шаг 2. Создать SSH-ключ (три раза Enter - без пароля на ключ):
+
+  ssh-keygen -t ed25519 -C "rogirem@github" -f ~/.ssh/id_ed25519 -N ""
+
+Шаг 3. Показать публичный ключ и скопировать его целиком (строка начинается с ssh-ed25519):
+
+  cat ~/.ssh/id_ed25519.pub
+
+Шаг 4. На GitHub: свой аватар (правый верхний угол) -> Settings -> слева SSH and GPG keys -> New SSH key. Title: например "vm master". Key: вставить скопированную строку. Add SSH key.
+
+Шаг 5. В каталоге проекта - если remote уже добавлен по HTTPS, переключить на SSH (подставь свой username вместо rogirem):
+
+  cd /opt/pr4/bank-guarantee
+  git remote set-url origin git@github.com:rogirem/bank-guarantee.git
+
+Если remote ещё не добавлен:
+
+  git remote add origin git@github.com:rogirem/bank-guarantee.git
+
+Шаг 6. Коммит и push (пароль и токен не спрашивает):
+
+  git add .
+  git commit -m "Bank guarantee: Swarm, Jenkins, FIO VARCHAR check"
+  git branch -M main
+  git push -u origin main
+
+При первом push может спросить "Are you sure you want to continue connecting? yes" - написать yes. Дальше push будет без вопросов.
+
+--------------------------------------------------------------------------------
+3. ПОДГОТОВКА JENKINS НА MASTER
+--------------------------------------------------------------------------------
+
+  sudo mkdir -p /opt/jenkins
+  cd /opt/pr4/bank-guarantee
+  sudo docker build -f jenkins.Dockerfile -t bank-guarantee-jenkins:latest .
+  sudo docker stack deploy -c docker-compose.yaml bank-guarantee
+
+Jenkins в браузере: http://IP_MASTER:8080 (например 192.168.0.1:8080).
+
+Пароль при первом входе - из логов:
+
+  sudo docker service logs bank-guarantee_jenkins 2>&1 | grep -i password
+
+Или из контейнера:
+
+  CONTAINER=$(sudo docker ps -q -f name=bank-guarantee_jenkins)
+  sudo docker exec $CONTAINER cat /var/jenkins_home/secrets/initialAdminPassword
+
+--------------------------------------------------------------------------------
+4. JOB "FIO = VARCHAR" (НАСТРОЙКА В JENKINS НА РУССКОМ)
+--------------------------------------------------------------------------------
+
+Где Pipeline и нужно ли его ставить
+  - "Pipeline" — это не отдельный плагин в настройках задания, а ТИП задания. Блок "Pipeline" (с полем "Definition" и "Script Path") есть только у заданий типа "Pipeline".
+  - Если у тебя при создании было выбрано "Свободный проект" (Freestyle), в "Настройка" будут "Управление исходным кодом", "Шаги сборки" и т.д., но блока "Pipeline" не будет. Тогда нужно создать новое задание типа "Pipeline" (см. ниже).
+  - Если при нажатии "Создать задание" (New Item) в списке типов нет пункта "Pipeline" — нужно поставить плагин: Управление Jenkins (Manage Jenkins) -> Управление плагинами (Plugins) -> вкладка "Доступные" (Available) -> в поиске ввести Pipeline -> отметить "Pipeline" (и при желании "Pipeline: Stage View") -> Установить. После установки перезапустить Jenkins при необходимости. Тогда в "Создать задание" появится тип "Pipeline".
+
+Как создать задание типа Pipeline
+  1. В меню слева: "Новый проект" / "Создать задание" (New Item).
+  2. Имя: bank-guarantee-schema-check (или другое).
+  3. В списке типов выбрать именно "Pipeline" (не "Свободный проект"). Нажать OK.
+  4. Откроется "Настройка" — в ней будет блок "Pipeline" (внизу или после "Общие настройки"). В нём: Definition = "Pipeline script from SCM", SCM = Git, URL репозитория, учётные данные, ветка */main, Script Path = Jenkinsfile. Сохранить.
+
+На странице "Настройка" (Configure) задания типа Pipeline:
+
+  Общие настройки
+  - Можно оставить как есть (Enabled включено, описание по желанию).
+
+  Управление исходным кодом (Source Code Management)
+  - Сейчас выбрано "Нет". Нужно выбрать "Git".
+  - Repository URL: git@github.com:rogirem/bank-guarantee.git (подставь свой логин вместо rogirem).
+  - Учётные данные (Credentials): нажать "Добавить" -> "Jenkins". Вид: "SSH Username with private key". ID: например github-ssh. Username: git. В "Private Key" выбрать "Enter directly" и вставить содержимое ключа с виртуалки (на виртуалке: cat ~/.ssh/id_ed25519 — скопировать весь блок от -----BEGIN до -----END включительно). Сохранить, затем в выпадающем списке Credentials выбрать эту запись.
+  - Ветка для сборки (Branch): */main.
+  - Путь к сценарию (Script Path): Jenkinsfile.
+
+  Если в блоке "Pipeline" поле SCM стоит "Нет" — настроек репозитория не будет. Нужно:
+  - В выпадающем списке "SCM" (под "Definition") выбрать "Git" (не "Нет"). После выбора появятся поля: Repository URL, Credentials, ветка, Script Path и т.д.
+  - Definition: оставить "Pipeline script from SCM".
+  - Repository URL: https://github.com/rogirem/bank-guarantee или git@github.com:rogirem/bank-guarantee.git (подставь свой логин).
+  - Credentials (Учётные данные): выбрать созданный ранее SSH-ключ (или добавить: Kind = "SSH Username with private key", вставить приватный ключ с виртуалки).
+  - Ветка (Branch): */main.
+  - Script Path: Jenkinsfile (у тебя уже указано — не трогать).
+  - Сохранить (Save / Применить).
+
+  Триггеры (Triggers)
+  - Можно не включать. Или "Запускать периодически" с расписанием, например H/5 * * * * (каждые 5 минут).
+
+Сохранить ("Сохранить" или "Apply"). Запуск сборки: "Собрать сейчас" (Build Now). В "Вывод консоли" (Console Output) должны быть стадии Checkout и "Check schema: FIO is VARCHAR"; при корректном schema.sql сборка будет зелёная.
+
+Для демо преподавателю: в schema.sql заменить name VARCHAR(255)... на name INT..., сделать push в GitHub, в Jenkins снова "Собрать сейчас" — сборка упадёт; вернуть VARCHAR и push — сборка станет зелёной.
+
+--------------------------------------------------------------------------------
+4.1. ЕСЛИ "SCRIPT PATH НЕ НАШЁЛ" ИЛИ В КОНСОЛИ НЕТ СТАДИИ "CHECK SCHEMA"
+--------------------------------------------------------------------------------
+
+Сейчас у тебя: репозиторий клонируется, сборка зелёная, но в логе нет стадий "Checkout" и "Check schema: FIO is VARCHAR" — значит Pipeline по Jenkinsfile не запускается, проверка VARCHAR к твоим данным не применяется.
+
+Что сделать:
+1. Зайти в задание -> Настройки (Configure).
+2. Найти блок "Pipeline" (или "Определение Pipeline" / Definition).
+3. В поле "Definition" выбрать "Pipeline script from SCM" (Сценарий из системы управления версиями).
+4. SCM: Git. Repository URL: https://github.com/rogirem/bank-guarantee (или git@github.com:rogirem/bank-guarantee.git — как настроено). Ветка: */main.
+5. Важно: в поле "Script Path" (Путь к сценарию) указать ровно: Jenkinsfile (одно слово, с большой J, без пути — файл в корне репо). Если поле было пустым или с другим значением — исправить, Сохранить.
+6. Собрать сейчас (Build Now). В "Вывод консоли" должны появиться стадии "Checkout" и "Check schema: FIO is VARCHAR", строка типа "OK: clients.name is VARCHAR". Тогда проверка уже применяется к твоим данным (к файлу server/schema.sql в репозитории).
+
+--------------------------------------------------------------------------------
+5. ШАГИ СДАЧИ ПРЕПОДАВАТЕЛЮ (КРАТКО)
+--------------------------------------------------------------------------------
+
+Что показать: Jenkins работает, забирает код из Git, проверяет, что поле FIO (name в таблице clients) в схеме — VARCHAR; при нарушении сборка падает.
+
+Шаг 1. Исправить Script Path (см. 4.1), убедиться, что в консоли сборки есть стадия "Check schema: FIO is VARCHAR" и "OK: clients.name is VARCHAR".
+
+Шаг 2. Открыть Jenkins в браузере (http://IP_MASTER:8080), зайти в задание bank-guarantee-schema-check. Показать: последняя сборка зелёная, "Последняя успешная сборка".
+
+Шаг 3. Открыть "Вывод консоли" (Console Output) этой сборки. Показать строки:
+   - Running in workspace ...
+   - Cloning / Fetching ...
+   - [Pipeline] stage (Checkout)
+   - [Pipeline] stage (Check schema: FIO is VARCHAR)
+   - OK: clients.name is VARCHAR (или аналог из скрипта)
+
+Шаг 4. (По желанию) Показать падение при неправильном типе:
+   - На виртуалке в каталоге проекта: открыть server/schema.sql, в таблице clients заменить строку с name VARCHAR(255) на name INT (или другую не-VARCHAR).
+   - Закоммитить и запушить:
+     cd /opt/pr4/bank-guarantee
+     git add server/schema.sql
+     git commit -m "temp: FIO as INT for demo"
+     git push origin main
+   - В Jenkins нажать "Собрать сейчас". Сборка должна упасть (красная). В консоли — сообщение от скрипта про то, что name не VARCHAR.
+   - Вернуть VARCHAR и снова push:
+     (в schema.sql вернуть name VARCHAR(255) ...)
+     git add server/schema.sql
+     git commit -m "restore: FIO VARCHAR"
+     git push origin main
+   - В Jenkins снова "Собрать сейчас" — сборка зелёная.
+
+Основные команды по ходу сдачи (на виртуалке, в /opt/pr4/bank-guarantee):
+  git status
+  git add .
+  git commit -m "..."
+  git push origin main
+(В Jenkins только кнопка "Собрать сейчас".)
+
+--------------------------------------------------------------------------------
+6. ЧЕК-ЛИСТ
+--------------------------------------------------------------------------------
+
+- Зарегистрироваться на GitHub, репозиторий bank-guarantee.
+- Скопировать проект в /opt/pr4/bank-guarantee (или работать из /media/sf_pr4).
+- Настроить SSH (ssh-keygen, добавить ключ в GitHub, remote на git@github.com:...), потом git add, commit, push.
+- mkdir /opt/jenkins, docker build jenkins.Dockerfile, stack deploy.
+- Открыть :8080, разблокировать, установить плагины, создать админа.
+- Pipeline job из Git, в настройках Pipeline: Script Path = Jenkinsfile (ровно так), Build Now.
+
+================================================================================
